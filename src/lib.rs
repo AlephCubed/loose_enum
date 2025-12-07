@@ -38,6 +38,15 @@ macro_rules! loose_enum {
             }
         }
 
+        impl<'a> From<&'a str> for $name {
+            fn from(value: &'a str) -> Self {
+                match value {
+                    $( c if c == $value => $name::$variant, )+
+                    other => $name::Unknown(other.to_string()),
+                }
+            }
+        }
+
         impl From<$name> for String {
             fn from(value: $name) -> Self {
                 match value {
@@ -219,23 +228,82 @@ mod tests {
 
     #[cfg(feature = "std")]
     loose_enum!(
+        #[derive(Debug, Eq, PartialEq)]
         enum StringEnum: String {
-            Apple = "Apple",
-            Banana = "Banana",
-            Orange = String::default(),
+            Foo = "Foo",
+            Bar = "Bar",
+            None = &String::default(),
         }
     );
 
     loose_enum! {
+        #[derive(Debug, Eq, PartialEq)]
         pub enum IntEnum: u8 {
             Zero = 0,
         }
     }
 
     loose_enum![
+        #[derive(Debug, PartialEq)]
         pub(super) enum FloatEnum: f32 {
             Default = f32::default(),
             Pi = 3.14,
         }
     ];
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn string_to_enum() {
+        assert_eq!(StringEnum::from("Foo".to_string()), StringEnum::Foo);
+        assert_eq!(StringEnum::from("Bar"), StringEnum::Bar);
+        assert_eq!(StringEnum::from(""), StringEnum::None);
+
+        assert_eq!(
+            StringEnum::from("Other"),
+            StringEnum::Unknown("Other".to_string())
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn enum_to_string() {
+        assert_eq!(String::from(StringEnum::Foo), "Foo".to_string());
+        assert_eq!(String::from(StringEnum::Bar), "Bar".to_string());
+        assert_eq!(String::from(StringEnum::None), "".to_string());
+
+        assert_eq!(
+            String::from(StringEnum::Unknown("Other".to_string())),
+            "Other".to_string()
+        );
+    }
+
+    #[test]
+    fn int_to_enum() {
+        assert_eq!(IntEnum::from(0), IntEnum::Zero);
+
+        assert_eq!(IntEnum::from(123), IntEnum::Unknown(123));
+    }
+
+    #[test]
+    fn enum_to_int() {
+        assert_eq!(u8::from(IntEnum::Zero), 0);
+
+        assert_eq!(u8::from(IntEnum::Unknown(123)), 123);
+    }
+
+    #[test]
+    fn float_to_enum() {
+        assert_eq!(FloatEnum::from(0.0), FloatEnum::Default);
+        assert_eq!(FloatEnum::from(3.14), FloatEnum::Pi);
+
+        assert_eq!(FloatEnum::from(123.0), FloatEnum::Unknown(123.0));
+    }
+
+    #[test]
+    fn enum_to_float() {
+        assert_eq!(f32::from(FloatEnum::Default), 0.0);
+        assert_eq!(f32::from(FloatEnum::Pi), 3.14);
+
+        assert_eq!(f32::from(FloatEnum::Unknown(123.0)), 123.0);
+    }
 }
