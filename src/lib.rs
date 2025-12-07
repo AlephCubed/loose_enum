@@ -176,8 +176,8 @@ macro_rules! loose_enum {
 
         // Todo Orphan rule forbids `From` impl.
         impl<$ty$(: $first_bound $(+ $other_bounds)+)?> $name<$ty> {
-            pub fn from_loose(value: $name<$ty>) -> $ty {
-                match value {
+            pub fn to_repr(self) -> $ty {
+                match self {
                     $( $name::$variant => $value, )+
                     $name::Unknown(val) => val,
                 }

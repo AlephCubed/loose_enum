@@ -44,7 +44,7 @@ impl<T: PrimInt + ConstZero + ConstOne> TryFrom<LooseBool<T>> for bool {
 }
 
 /// Error returned when attempting to convert a [`LooseBool::Unknown`] into a `bool`.
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct UnknownBoolError;
 
 impl Display for UnknownBoolError {
@@ -54,3 +54,85 @@ impl Display for UnknownBoolError {
 }
 
 impl Error for UnknownBoolError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn u8_to_loose() {
+        assert_eq!(LooseBool::from(0u8), LooseBool::False);
+        assert_eq!(LooseBool::from(1u8), LooseBool::True);
+
+        for i in 2..u8::MAX {
+            assert_eq!(
+                LooseBool::from(i),
+                LooseBool::Unknown(i),
+                "Failed for i={i}"
+            );
+        }
+    }
+
+    #[test]
+    fn i8_to_loose() {
+        assert_eq!(LooseBool::from(0i8), LooseBool::False);
+        assert_eq!(LooseBool::from(1i8), LooseBool::True);
+
+        for i in 2..i8::MAX {
+            assert_eq!(
+                LooseBool::from(i),
+                LooseBool::Unknown(i),
+                "Failed for i={i}"
+            );
+        }
+
+        for i in i8::MIN..0 {
+            assert_eq!(
+                LooseBool::from(i),
+                LooseBool::Unknown(i),
+                "Failed for i={i}"
+            );
+        }
+    }
+
+    #[test]
+    fn loose_to_u8() {
+        assert_eq!(LooseBool::<u8>::False.to_repr(), 0);
+        assert_eq!(LooseBool::<u8>::True.to_repr(), 1);
+
+        for i in 2..u8::MAX {
+            assert_eq!(LooseBool::<u8>::Unknown(i).to_repr(), i, "Failed for i={i}");
+        }
+    }
+
+    #[test]
+    fn loose_to_i8() {
+        assert_eq!(LooseBool::<i8>::False.to_repr(), 0);
+        assert_eq!(LooseBool::<i8>::True.to_repr(), 1);
+
+        for i in 2..i8::MAX {
+            assert_eq!(LooseBool::<i8>::Unknown(i).to_repr(), i, "Failed for i={i}");
+        }
+
+        for i in i8::MIN..0 {
+            assert_eq!(LooseBool::<i8>::Unknown(i).to_repr(), i, "Failed for i={i}");
+        }
+    }
+
+    #[test]
+    fn loose_to_bool() {
+        assert_eq!(LooseBool::<i32>::True.try_into(), Ok(true));
+        assert_eq!(LooseBool::<i32>::False.try_into(), Ok(false));
+
+        for i in 2..u8::MAX {
+            let b: Result<bool, UnknownBoolError> = LooseBool::<i32>::Unknown(i as i32).try_into();
+            assert_eq!(b, Err(UnknownBoolError), "Failed for i={i}");
+        }
+    }
+
+    #[test]
+    fn bool_to_loose() {
+        assert_eq!(LooseBool::<u64>::from_bool(false), LooseBool::False);
+        assert_eq!(LooseBool::<u64>::from_bool(true), LooseBool::True);
+    }
+}
