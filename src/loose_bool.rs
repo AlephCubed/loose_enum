@@ -6,6 +6,11 @@ use num_traits::{ConstOne, ConstZero, PrimInt};
 loose_enum! {
     /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as `Unknown`.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
+    #[cfg_attr(
+        feature = "bevy_reflect",
+        derive(bevy_reflect::Reflect),
+        reflect(Debug, Clone, PartialEq)
+    )]
     pub enum LooseBool<T: PrimInt + ConstZero + ConstOne> {
         #[default]
         False = T::ZERO,
