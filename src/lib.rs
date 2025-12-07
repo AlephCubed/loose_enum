@@ -6,7 +6,148 @@ mod loose_bool;
 #[cfg(feature = "loose_bool")]
 pub use loose_bool::LooseBool;
 
+#[doc(hidden)]
+#[cfg(feature = "serde")]
+pub use serde_core as __serde;
+
 /// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Unknown`.
+#[cfg(not(feature = "serde"))]
+#[macro_export]
+macro_rules! loose_enum {
+    // Special case for strings:
+    (
+        $(#[$outer:meta])*
+        $vis:vis enum $name:ident: String
+        {
+            $(
+                $(#[$meta:meta])*
+                $variant:ident = $value:expr
+            ),+ $(,)?
+        }
+    ) => {
+        $(#[$outer])*
+        $vis enum $name {
+            $(
+                $(#[$meta])*
+                $variant
+            ),+,
+            Unknown(String),
+        }
+
+        impl From<String> for $name {
+            fn from(value: String) -> Self {
+                match value.as_str() {
+                    $( c if c == $value => $name::$variant, )+
+                    other => $name::Unknown(other.to_string()),
+                }
+            }
+        }
+
+        impl<'a> From<&'a str> for $name {
+            fn from(value: &'a str) -> Self {
+                match value {
+                    $( c if c == $value => $name::$variant, )+
+                    other => $name::Unknown(other.to_string()),
+                }
+            }
+        }
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                match value {
+                    $( $name::$variant => $value.to_string(), )+
+                    $name::Unknown(val) => val,
+                }
+            }
+        }
+    };
+
+
+
+    // All other types:
+    (
+        $(#[$outer:meta])*
+        $vis:vis enum $name:ident: $ty:ident
+        {
+            $(
+                $(#[$meta:meta])*
+                $variant:ident = $value:expr
+            ),+ $(,)?
+        }
+    ) => {
+        $(#[$outer])*
+        $vis enum $name {
+            $(
+                $(#[$meta])*
+                $variant
+            ),+,
+            Unknown($ty),
+        }
+
+        impl From<$ty> for $name {
+            fn from(value: $ty) -> Self {
+                match value {
+                    $( c if c == $value => $name::$variant, )+
+                    other => $name::Unknown(other),
+                }
+            }
+        }
+
+        impl From<$name> for $ty {
+            fn from(value: $name) -> Self {
+                match value {
+                    $( $name::$variant => $value, )+
+                    $name::Unknown(val) => val,
+                }
+            }
+        }
+    };
+
+
+
+    // Generic:
+    (
+        $(#[$outer:meta])*
+        $vis:vis enum $name:ident<$ty:ident $( : $first_bound:tt $(+ $other_bounds:tt)* )?>
+        {
+            $(
+                $(#[$meta:meta])*
+                $variant:ident = $value:expr
+            ),+ $(,)?
+        }
+    ) => {
+        $(#[$outer])*
+        $vis enum $name<$ty$(: $first_bound $(+ $other_bounds)+)?> {
+            $(
+                $(#[$meta])*
+                $variant
+            ),+,
+            Unknown($ty),
+        }
+
+        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> From<$ty> for $name<$ty> {
+            fn from(value: $ty) -> Self {
+                match value {
+                    $( c if c == $value => $name::$variant, )+
+                    other => $name::Unknown(other),
+                }
+            }
+        }
+
+        // Todo Orphan rule forbids `From` impl.
+        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> $name<$ty> {
+            pub fn to_repr(self) -> $ty {
+                match self {
+                    $( $name::$variant => $value, )+
+                    $name::Unknown(val) => val,
+                }
+            }
+        }
+    };
+}
+
+/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Unknown`.
+#[cfg(feature = "serde")]
 #[macro_export]
 macro_rules! loose_enum {
     // Special case for strings:
@@ -56,11 +197,10 @@ macro_rules! loose_enum {
             }
         }
 
-        #[cfg(feature = "serde")]
-        impl<'de> serde_core::Deserialize<'de> for $name {
+        impl<'de> $crate::__serde::Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde_core::Deserializer<'de>,
+                D: $crate::__serde::Deserializer<'de>,
             {
                 let val = String::deserialize(deserializer)?;
                 Ok(match val.as_str() {
@@ -70,11 +210,10 @@ macro_rules! loose_enum {
             }
         }
 
-        #[cfg(feature = "serde")]
-        impl serde_core::Serialize for $name {
+        impl $crate::__serde::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde_core::Serializer,
+                S: $crate::__serde::Serializer,
             {
                 match self {
                     $( $name::$variant => str::serialize($value, serializer), )+
@@ -124,11 +263,10 @@ macro_rules! loose_enum {
             }
         }
 
-        #[cfg(feature = "serde")]
-        impl<'de> serde_core::Deserialize<'de> for $name {
+        impl<'de> $crate::__serde::Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde_core::Deserializer<'de>,
+                D: $crate::__serde::Deserializer<'de>,
             {
                 let val = $ty::deserialize(deserializer)?;
                 Ok(match val {
@@ -138,11 +276,10 @@ macro_rules! loose_enum {
             }
         }
 
-        #[cfg(feature = "serde")]
-        impl serde_core::Serialize for $name {
+        impl $crate::__serde::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde_core::Serializer,
+                S: $crate::__serde::Serializer,
             {
                 match self {
                     $( $name::$variant => $ty::serialize(&$value, serializer), )+
@@ -193,11 +330,10 @@ macro_rules! loose_enum {
             }
         }
 
-        #[cfg(feature = "serde")]
-        impl<'de, $ty$(: $first_bound $(+ $other_bounds)+)? + serde_core::Deserialize<'de>> serde_core::Deserialize<'de> for $name<$ty> {
+        impl<'de, $ty$(: $first_bound $(+ $other_bounds)+)? + $crate::__serde::Deserialize<'de>> $crate::__serde::Deserialize<'de> for $name<$ty> {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde_core::Deserializer<'de>,
+                D: $crate::__serde::Deserializer<'de>,
             {
                 let val = $ty::deserialize(deserializer)?;
                 Ok(match val {
@@ -207,11 +343,10 @@ macro_rules! loose_enum {
             }
         }
 
-        #[cfg(feature = "serde")]
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)? + serde_core::Serialize> serde_core::Serialize for $name<$ty> {
+        impl<$ty$(: $first_bound $(+ $other_bounds)+)? + $crate::__serde::Serialize> $crate::__serde::Serialize for $name<$ty> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde_core::Serializer,
+                S: $crate::__serde::Serializer,
             {
                 match self {
                     $( $name::$variant => $ty::serialize(&$value, serializer), )+
