@@ -10,10 +10,14 @@ license = "MIT OR Apache-2.0"
 authors = ["AlephCubed"]
 
 [features]
-default = ["loose_bool"]
+default = ["loose_bool", "std"]
+std = []
 loose_bool = ["num-traits"]
-serde = ["dep:serde"]
+
+serde = ["dep:serde_core"]
 
 [dependencies]
-serde = { version = "1.0", optional = true }
-num-traits = { version = "0.2", optional = true }
+serde_core = { version = "1.0", optional = true, default-features = false, features = [
+  "std",
+] }
+num-traits = { version = "0.2", optional = true, default-features = false }

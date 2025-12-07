@@ -1,4 +1,4 @@
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "loose_bool")]
 mod loose_bool;
@@ -32,7 +32,7 @@ macro_rules! loose_enum {
         impl From<String> for $name {
             fn from(value: String) -> Self {
                 match value.as_str() {
-                    $( $value => $name::$variant, )+
+                    $( c if c == $value => $name::$variant, )+
                     other => $name::Unknown(other.to_string()),
                 }
             }
@@ -48,24 +48,24 @@ macro_rules! loose_enum {
         }
 
         #[cfg(feature = "serde")]
-        impl<'de> serde::Deserialize<'de> for $name {
+        impl<'de> serde_core::Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::Deserializer<'de>,
+                D: serde_core::Deserializer<'de>,
             {
                 let val = String::deserialize(deserializer)?;
                 Ok(match val.as_str() {
-                    $( $value => $name::$variant, )+
+                    $( c if c == $value => $name::$variant, )+
                     other => $name::Unknown(other.to_string()),
                 })
             }
         }
 
         #[cfg(feature = "serde")]
-        impl serde::Serialize for $name {
+        impl serde_core::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: serde_core::Serializer,
             {
                 match self {
                     $( $name::$variant => str::serialize($value, serializer), )+
@@ -100,7 +100,7 @@ macro_rules! loose_enum {
         impl From<$ty> for $name {
             fn from(value: $ty) -> Self {
                 match value {
-                    $( $value => $name::$variant, )+
+                    $( c if c == $value => $name::$variant, )+
                     other => $name::Unknown(other),
                 }
             }
@@ -116,24 +116,24 @@ macro_rules! loose_enum {
         }
 
         #[cfg(feature = "serde")]
-        impl<'de> serde::Deserialize<'de> for $name {
+        impl<'de> serde_core::Deserialize<'de> for $name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::Deserializer<'de>,
+                D: serde_core::Deserializer<'de>,
             {
                 let val = $ty::deserialize(deserializer)?;
                 Ok(match val {
-                    $( $value => $name::$variant, )+
+                    $( c if c == $value => $name::$variant, )+
                     other => $name::Unknown(other),
                 })
             }
         }
 
         #[cfg(feature = "serde")]
-        impl serde::Serialize for $name {
+        impl serde_core::Serialize for $name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: serde_core::Serializer,
             {
                 match self {
                     $( $name::$variant => $ty::serialize(&$value, serializer), )+
@@ -185,24 +185,24 @@ macro_rules! loose_enum {
         }
 
         #[cfg(feature = "serde")]
-        impl<'de, $ty$(: $first_bound $(+ $other_bounds)+)?> serde::Deserialize<'de> for $name<$ty> {
+        impl<'de, $ty$(: $first_bound $(+ $other_bounds)+)? + serde_core::Deserialize<'de>> serde_core::Deserialize<'de> for $name<$ty> {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::Deserializer<'de>,
+                D: serde_core::Deserializer<'de>,
             {
                 let val = $ty::deserialize(deserializer)?;
                 Ok(match val {
-                    $( $value => $name::$variant, )+
+                    $( c if c == $value => $name::$variant, )+
                     other => $name::Unknown(other),
                 })
             }
         }
 
         #[cfg(feature = "serde")]
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> serde::Serialize for $name<$ty> {
+        impl<$ty$(: $first_bound $(+ $other_bounds)+)? + serde_core::Serialize> serde_core::Serialize for $name<$ty> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: serde_core::Serializer,
             {
                 match self {
                     $( $name::$variant => $ty::serialize(&$value, serializer), )+
@@ -211,4 +211,31 @@ macro_rules! loose_enum {
             }
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(feature = "std")]
+    loose_enum!(
+        enum StringEnum: String {
+            Apple = "Apple",
+            Banana = "Banana",
+            Orange = String::default(),
+        }
+    );
+
+    loose_enum! {
+        pub enum IntEnum: u8 {
+            Zero = 0,
+        }
+    }
+
+    loose_enum![
+        pub(super) enum FloatEnum: f32 {
+            Default = f32::default(),
+            Pi = 3.14,
+        }
+    ];
 }
