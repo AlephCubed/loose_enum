@@ -12,22 +12,26 @@ loose_enum! {
     /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as Unknown.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
     pub enum LooseBool<T: PrimInt + ConstZero + ConstOne> {
+        /// A falsy value of zero.
         #[default]
         False = T::ZERO,
+        /// A truthy value of one.
         True = T::ONE,
     }
 }
 
 impl<T: PrimInt + ConstZero + ConstOne> LooseBool<T> {
+    /// Returns true if the value is [`True`](Self::True).
     pub fn is_true(&self) -> bool {
         matches!(self, Self::True)
     }
 
+    /// Returns true if the value is [`False`](Self::False).
     pub fn is_false(&self) -> bool {
         matches!(self, Self::False)
     }
 
-    // Orphan rule forbids `From` implementation, so we create our own method.
+    /// Orphan rule forbids `From` implementation, so we create our own method.
     pub fn from_bool(value: bool) -> Self {
         match value {
             true => Self::True,

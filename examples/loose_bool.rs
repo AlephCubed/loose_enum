@@ -11,17 +11,21 @@ loose_enum! {
     /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as Unknown.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
     pub enum LooseBool: i32 {
+        /// A falsy value of zero.
         #[default]
         False = 0,
+        /// A truthy value of one.
         True = 1,
     }
 }
 
 impl LooseBool {
+    /// Returns true if the value is [`True`](Self::True).
     pub fn is_true(&self) -> bool {
         matches!(self, Self::True)
     }
 
+    /// Returns true if the value is [`False`](Self::False).
     pub fn is_false(&self) -> bool {
         matches!(self, Self::False)
     }
