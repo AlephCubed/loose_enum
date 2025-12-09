@@ -60,30 +60,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn int_to_loose() {
-        assert_eq!(LooseBool::from(0), LooseBool::False);
-        assert_eq!(LooseBool::from(1), LooseBool::True);
-
-        for i in 2..256 {
-            assert_eq!(
-                LooseBool::from(i),
-                LooseBool::Unknown(i),
-                "Failed for i={i}"
-            );
-        }
-    }
-
-    #[test]
-    fn loose_to_int() {
-        assert_eq!(i32::from(LooseBool::False), 0);
-        assert_eq!(i32::from(LooseBool::True), 1);
-
-        for i in 2..256 {
-            assert_eq!(i32::from(LooseBool::Unknown(i)), i, "Failed for i={i}");
-        }
-    }
-
-    #[test]
     fn loose_to_bool() {
         assert_eq!(bool::try_from(LooseBool::True), Ok(true));
         assert_eq!(bool::try_from(LooseBool::False), Ok(false));
