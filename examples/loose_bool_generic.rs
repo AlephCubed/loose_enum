@@ -1,23 +1,24 @@
 //! This example creates a repr bool with 0 as False, 1 aa True, and anything else as Unknown.
 //! Also included are `From`/`TryFrom` implementations to convert to/from a standard bool.
 //!
-//! A generic version of this example is also available in `loose_bool_generic.rs`.
+//! A non-generic version of this example is also available in `loose_bool.rs`.
 
 use core::error::Error;
 use core::fmt::{Display, Formatter};
 use loose_enum::loose_enum;
+use num_traits::{ConstOne, ConstZero, PrimInt};
 
 loose_enum! {
     /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as Unknown.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
-    pub enum LooseBool: i32 {
+    pub enum LooseBool<T: PrimInt + ConstZero + ConstOne> {
         #[default]
-        False = 0,
-        True = 1,
+        False = T::ZERO,
+        True = T::ONE,
     }
 }
 
-impl LooseBool {
+impl<T: PrimInt + ConstZero + ConstOne> LooseBool<T> {
     pub fn is_true(&self) -> bool {
         matches!(self, Self::True)
     }
@@ -25,10 +26,9 @@ impl LooseBool {
     pub fn is_false(&self) -> bool {
         matches!(self, Self::False)
     }
-}
 
-impl From<bool> for LooseBool {
-    fn from(value: bool) -> Self {
+    // Orphan rule forbids `From` implementation, so we create our own method.
+    pub fn from_bool(value: bool) -> Self {
         match value {
             true => Self::True,
             false => Self::False,
@@ -36,10 +36,10 @@ impl From<bool> for LooseBool {
     }
 }
 
-impl TryFrom<LooseBool> for bool {
+impl<T: PrimInt + ConstZero + ConstOne> TryFrom<LooseBool<T>> for bool {
     type Error = UnknownBoolError;
 
-    fn try_from(value: LooseBool) -> Result<Self, Self::Error> {
+    fn try_from(value: LooseBool<T>) -> Result<Self, Self::Error> {
         match value {
             LooseBool::False => Ok(false),
             LooseBool::True => Ok(true),
@@ -66,21 +66,18 @@ mod tests {
 
     #[test]
     fn loose_to_bool() {
-        assert_eq!(bool::try_from(LooseBool::True), Ok(true));
-        assert_eq!(bool::try_from(LooseBool::False), Ok(false));
+        assert_eq!(LooseBool::<u8>::True.try_into(), Ok(true));
+        assert_eq!(LooseBool::<u8>::False.try_into(), Ok(false));
 
-        for i in 2..256 {
-            assert_eq!(
-                bool::try_from(LooseBool::Unknown(i)),
-                Err(UnknownBoolError),
-                "Failed for i={i}"
-            );
+        for i in 2..u8::MAX {
+            let b: Result<bool, UnknownBoolError> = LooseBool::Unknown(i).try_into();
+            assert_eq!(b, Err(UnknownBoolError), "Failed for i={i}");
         }
     }
 
     #[test]
     fn bool_to_loose() {
-        assert_eq!(LooseBool::from(false), LooseBool::False);
-        assert_eq!(LooseBool::from(true), LooseBool::True);
+        assert_eq!(LooseBool::<i64>::from_bool(false), LooseBool::False);
+        assert_eq!(LooseBool::<i64>::from_bool(true), LooseBool::True);
     }
 }
