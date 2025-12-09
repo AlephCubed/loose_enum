@@ -10,16 +10,15 @@ license = "MIT OR Apache-2.0"
 authors = ["AlephCubed"]
 
 [features]
-default = ["loose_bool", "std"]
+default = ["std"]
 std = []
-loose_bool = ["num-traits"]
-
 serde = ["dep:serde_core"]
-bevy_reflect = ["dep:bevy_reflect", "loose_bool"]
 
 [dependencies]
-bevy_reflect = { version = "0.17.3", optional = true, default-features = false }
-num-traits = { version = "0.2", optional = true, default-features = false }
 serde_core = { version = "1.0", optional = true, default-features = false, features = [
   "std",
 ] }
+
+[[example]]
+name = "loose_bool"
+crate-type = ["lib"]

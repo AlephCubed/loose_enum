@@ -26,3 +26,8 @@ jobs:
         run: cargo build --verbose --all-features
       - name: Run tests (All features)
         run: cargo test --verbose --all-features
+
+      - name: Build (Examples)
+        run: cargo build --verbose --all-features --examples
+      - name: Run tests (Examples)
+        run: cargo test --verbose --all-features --examples

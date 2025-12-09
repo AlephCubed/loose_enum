@@ -1,11 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(feature = "loose_bool")]
-mod loose_bool;
-
-#[cfg(feature = "loose_bool")]
-pub use loose_bool::LooseBool;
-
 #[doc(hidden)]
 #[cfg(feature = "serde")]
 pub use serde_core as __serde;
