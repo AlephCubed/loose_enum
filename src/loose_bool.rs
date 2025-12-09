@@ -9,7 +9,6 @@ loose_enum! {
     #[cfg_attr(
         feature = "bevy_reflect",
         derive(bevy_reflect::Reflect),
-        reflect(Debug, Clone, PartialEq)
     )]
     pub enum LooseBool<T: PrimInt + ConstZero + ConstOne> {
         #[default]
