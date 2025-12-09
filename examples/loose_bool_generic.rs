@@ -1,4 +1,4 @@
-//! This example creates a repr bool with 0 as False, 1 aa True, and anything else as Unknown.
+//! This example creates a repr bool with 0 as False, 1 aa True, and anything else as Undefined.
 //! Also included are `From`/`TryFrom` implementations to convert to/from a standard bool.
 //!
 //! A non-generic version of this example is also available in `loose_bool.rs`.
@@ -9,7 +9,7 @@ use loose_enum::loose_enum;
 use num_traits::{ConstOne, ConstZero, PrimInt};
 
 loose_enum! {
-    /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as Unknown.
+    /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as Undefined.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
     pub enum LooseBool<T: PrimInt + ConstZero + ConstOne> {
         /// A falsy value of zero.
@@ -41,28 +41,28 @@ impl<T: PrimInt + ConstZero + ConstOne> LooseBool<T> {
 }
 
 impl<T: PrimInt + ConstZero + ConstOne> TryFrom<LooseBool<T>> for bool {
-    type Error = UnknownBoolError;
+    type Error = UndefinedBoolError;
 
     fn try_from(value: LooseBool<T>) -> Result<Self, Self::Error> {
         match value {
             LooseBool::False => Ok(false),
             LooseBool::True => Ok(true),
-            LooseBool::Unknown(_) => Err(UnknownBoolError),
+            LooseBool::Undefined(_) => Err(UndefinedBoolError),
         }
     }
 }
 
-/// Error returned when attempting to convert a [`LooseBool::Unknown`] into a `bool`.
+/// Error returned when attempting to convert a [`LooseBool::Undefined`] into a `bool`.
 #[derive(Debug, Eq, PartialEq, Hash)]
-pub struct UnknownBoolError;
+pub struct UndefinedBoolError;
 
-impl Display for UnknownBoolError {
+impl Display for UndefinedBoolError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Cannot convert `LooseBool::Unknown` into `bool`.")
+        write!(f, "Cannot convert `LooseBool::Undefined` into `bool`.")
     }
 }
 
-impl Error for UnknownBoolError {}
+impl Error for UndefinedBoolError {}
 
 #[cfg(test)]
 mod tests {
@@ -74,8 +74,8 @@ mod tests {
         assert_eq!(LooseBool::<u8>::False.try_into(), Ok(false));
 
         for i in 2..u8::MAX {
-            let b: Result<bool, UnknownBoolError> = LooseBool::Unknown(i).try_into();
-            assert_eq!(b, Err(UnknownBoolError), "Failed for i={i}");
+            let b: Result<bool, UndefinedBoolError> = LooseBool::Undefined(i).try_into();
+            assert_eq!(b, Err(UndefinedBoolError), "Failed for i={i}");
         }
     }
 

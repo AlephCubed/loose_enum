@@ -4,7 +4,7 @@
 #[cfg(feature = "serde")]
 pub use serde_core as __serde;
 
-/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Unknown`.
+/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(not(feature = "serde"))]
 #[macro_export]
 macro_rules! loose_enum {
@@ -25,14 +25,15 @@ macro_rules! loose_enum {
                 $(#[$meta])*
                 $variant
             ),+,
-            Unknown(String),
+            /// Any value that doesn't match another case.
+            Undefined(String),
         }
 
         impl From<String> for $name {
             fn from(value: String) -> Self {
                 match value.as_str() {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other.to_string()),
+                    other => $name::Undefined(other.to_string()),
                 }
             }
         }
@@ -41,7 +42,7 @@ macro_rules! loose_enum {
             fn from(value: &'a str) -> Self {
                 match value {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other.to_string()),
+                    other => $name::Undefined(other.to_string()),
                 }
             }
         }
@@ -50,7 +51,7 @@ macro_rules! loose_enum {
             fn from(value: $name) -> Self {
                 match value {
                     $( $name::$variant => $value.to_string(), )+
-                    $name::Unknown(val) => val,
+                    $name::Undefined(val) => val,
                 }
             }
         }
@@ -75,14 +76,15 @@ macro_rules! loose_enum {
                 $(#[$meta])*
                 $variant
             ),+,
-            Unknown($ty),
+            /// Any value that doesn't match another case.
+            Undefined($ty),
         }
 
         impl From<$ty> for $name {
             fn from(value: $ty) -> Self {
                 match value {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other),
+                    other => $name::Undefined(other),
                 }
             }
         }
@@ -91,7 +93,7 @@ macro_rules! loose_enum {
             fn from(value: $name) -> Self {
                 match value {
                     $( $name::$variant => $value, )+
-                    $name::Unknown(val) => val,
+                    $name::Undefined(val) => val,
                 }
             }
         }
@@ -116,31 +118,34 @@ macro_rules! loose_enum {
                 $(#[$meta])*
                 $variant
             ),+,
-            Unknown($ty),
+            /// Any value that doesn't match another case.
+            Undefined($ty),
         }
 
         impl<$ty$(: $first_bound $(+ $other_bounds)+)?> From<$ty> for $name<$ty> {
             fn from(value: $ty) -> Self {
                 match value {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other),
+                    other => $name::Undefined(other),
                 }
             }
         }
 
         // Todo Orphan rule forbids `From` impl.
         impl<$ty$(: $first_bound $(+ $other_bounds)+)?> $name<$ty> {
+            /// Converts the case into its representation.
+            /// Orphan rule forbids `From` implementation, so we create our own method.
             pub fn to_repr(self) -> $ty {
                 match self {
                     $( $name::$variant => $value, )+
-                    $name::Unknown(val) => val,
+                    $name::Undefined(val) => val,
                 }
             }
         }
     };
 }
 
-/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Unknown`.
+/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(feature = "serde")]
 #[macro_export]
 macro_rules! loose_enum {
@@ -161,14 +166,15 @@ macro_rules! loose_enum {
                 $(#[$meta])*
                 $variant
             ),+,
-            Unknown(String),
+            /// Any value that doesn't match another case.
+            Undefined(String),
         }
 
         impl From<String> for $name {
             fn from(value: String) -> Self {
                 match value.as_str() {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other.to_string()),
+                    other => $name::Undefined(other.to_string()),
                 }
             }
         }
@@ -177,7 +183,7 @@ macro_rules! loose_enum {
             fn from(value: &'a str) -> Self {
                 match value {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other.to_string()),
+                    other => $name::Undefined(other.to_string()),
                 }
             }
         }
@@ -186,7 +192,7 @@ macro_rules! loose_enum {
             fn from(value: $name) -> Self {
                 match value {
                     $( $name::$variant => $value.to_string(), )+
-                    $name::Unknown(val) => val,
+                    $name::Undefined(val) => val,
                 }
             }
         }
@@ -199,7 +205,7 @@ macro_rules! loose_enum {
                 let val = String::deserialize(deserializer)?;
                 Ok(match val.as_str() {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other.to_string()),
+                    other => $name::Undefined(other.to_string()),
                 })
             }
         }
@@ -211,7 +217,7 @@ macro_rules! loose_enum {
             {
                 match self {
                     $( $name::$variant => str::serialize($value, serializer), )+
-                    $name::Unknown(val) => str::serialize(val, serializer),
+                    $name::Undefined(val) => str::serialize(val, serializer),
                 }
             }
         }
@@ -236,14 +242,15 @@ macro_rules! loose_enum {
                 $(#[$meta])*
                 $variant
             ),+,
-            Unknown($ty),
+            /// Any value that doesn't match another case.
+            Undefined($ty),
         }
 
         impl From<$ty> for $name {
             fn from(value: $ty) -> Self {
                 match value {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other),
+                    other => $name::Undefined(other),
                 }
             }
         }
@@ -252,7 +259,7 @@ macro_rules! loose_enum {
             fn from(value: $name) -> Self {
                 match value {
                     $( $name::$variant => $value, )+
-                    $name::Unknown(val) => val,
+                    $name::Undefined(val) => val,
                 }
             }
         }
@@ -265,7 +272,7 @@ macro_rules! loose_enum {
                 let val = $ty::deserialize(deserializer)?;
                 Ok(match val {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other),
+                    other => $name::Undefined(other),
                 })
             }
         }
@@ -277,7 +284,7 @@ macro_rules! loose_enum {
             {
                 match self {
                     $( $name::$variant => $ty::serialize(&$value, serializer), )+
-                    $name::Unknown(val) => $ty::serialize(val, serializer),
+                    $name::Undefined(val) => $ty::serialize(val, serializer),
                 }
             }
         }
@@ -302,24 +309,27 @@ macro_rules! loose_enum {
                 $(#[$meta])*
                 $variant
             ),+,
-            Unknown($ty),
+            /// Any value that doesn't match another case.
+            Undefined($ty),
         }
 
         impl<$ty$(: $first_bound $(+ $other_bounds)+)?> From<$ty> for $name<$ty> {
             fn from(value: $ty) -> Self {
                 match value {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other),
+                    other => $name::Undefined(other),
                 }
             }
         }
 
         // Todo Orphan rule forbids `From` impl.
         impl<$ty$(: $first_bound $(+ $other_bounds)+)?> $name<$ty> {
+            /// Converts the case into its representation.
+            /// Orphan rule forbids `From` implementation, so we create our own method.
             pub fn to_repr(self) -> $ty {
                 match self {
                     $( $name::$variant => $value, )+
-                    $name::Unknown(val) => val,
+                    $name::Undefined(val) => val,
                 }
             }
         }
@@ -332,7 +342,7 @@ macro_rules! loose_enum {
                 let val = $ty::deserialize(deserializer)?;
                 Ok(match val {
                     $( c if c == $value => $name::$variant, )+
-                    other => $name::Unknown(other),
+                    other => $name::Undefined(other),
                 })
             }
         }
@@ -344,7 +354,7 @@ macro_rules! loose_enum {
             {
                 match self {
                     $( $name::$variant => $ty::serialize(&$value, serializer), )+
-                    $name::Unknown(val) => $ty::serialize(val, serializer),
+                    $name::Undefined(val) => $ty::serialize(val, serializer),
                 }
             }
         }
@@ -389,7 +399,7 @@ mod tests {
 
         assert_eq!(
             StringEnum::from("Other"),
-            StringEnum::Unknown("Other".to_string())
+            StringEnum::Undefined("Other".to_string())
         );
     }
 
@@ -401,7 +411,7 @@ mod tests {
         assert_eq!(String::from(StringEnum::None), "".to_string());
 
         assert_eq!(
-            String::from(StringEnum::Unknown("Other".to_string())),
+            String::from(StringEnum::Undefined("Other".to_string())),
             "Other".to_string()
         );
     }
@@ -410,14 +420,14 @@ mod tests {
     fn int_to_enum() {
         assert_eq!(IntEnum::from(0), IntEnum::Zero);
 
-        assert_eq!(IntEnum::from(123), IntEnum::Unknown(123));
+        assert_eq!(IntEnum::from(123), IntEnum::Undefined(123));
     }
 
     #[test]
     fn enum_to_int() {
         assert_eq!(u8::from(IntEnum::Zero), 0);
 
-        assert_eq!(u8::from(IntEnum::Unknown(123)), 123);
+        assert_eq!(u8::from(IntEnum::Undefined(123)), 123);
     }
 
     #[test]
@@ -425,7 +435,7 @@ mod tests {
         assert_eq!(FloatEnum::from(0.0), FloatEnum::Default);
         assert_eq!(FloatEnum::from(3.14), FloatEnum::Pi);
 
-        assert_eq!(FloatEnum::from(123.0), FloatEnum::Unknown(123.0));
+        assert_eq!(FloatEnum::from(123.0), FloatEnum::Undefined(123.0));
     }
 
     #[test]
@@ -433,6 +443,6 @@ mod tests {
         assert_eq!(f32::from(FloatEnum::Default), 0.0);
         assert_eq!(f32::from(FloatEnum::Pi), 3.14);
 
-        assert_eq!(f32::from(FloatEnum::Unknown(123.0)), 123.0);
+        assert_eq!(f32::from(FloatEnum::Undefined(123.0)), 123.0);
     }
 }
