@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[doc(hidden)]
@@ -79,7 +80,6 @@ macro_rules! loose_enum {
     };
 }
 
-
 /// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(feature = "serde")]
 #[macro_export]
@@ -104,7 +104,7 @@ macro_rules! loose_enum {
                 $($body)*
             }
         }
-        
+
         $crate::loose_enum_serde! {
             $(#[$outer])*
             $vis enum $name: String {
@@ -135,7 +135,7 @@ macro_rules! loose_enum {
                 $($body)*
             }
         }
-        
+
         $crate::loose_enum_serde! {
             $(#[$outer])*
             $vis enum $name: $ty {
@@ -167,7 +167,7 @@ macro_rules! loose_enum {
                 $($body)*
             }
         }
-        
+
         $crate::loose_enum_serde! {
             $(#[$outer])*
             $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
