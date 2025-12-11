@@ -1,6 +1,6 @@
 [package]
 name = "loose_enum"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 edition = "2024"
 description = "A macro for defining loose repr enums."
 categories = ["no-std", "no-std::no-alloc", "rust-patterns"]
@@ -9,17 +9,33 @@ repository = "https://github.com/AlephCubed/loose_enum"
 license = "MIT OR Apache-2.0"
 authors = ["AlephCubed"]
 
-[features]
-default = ["loose_bool", "std"]
-std = []
-loose_bool = ["num-traits"]
+[package.metadata.docs.rs]
+all-features = true
 
+[features]
+default = ["std"]
+std = []
 serde = ["dep:serde_core"]
-bevy_reflect = ["dep:bevy_reflect", "loose_bool"]
 
 [dependencies]
-bevy_reflect = { version = "0.17.3", optional = true, default-features = false }
-num-traits = { version = "0.2", optional = true, default-features = false }
 serde_core = { version = "1.0", optional = true, default-features = false, features = [
   "std",
 ] }
+
+[dev-dependencies]
+num-traits = { version = "0.2", default-features = false }
+
+[lints.rust]
+missing_docs = "warn"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docsrs_dep)'] }
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "warn"
+unused_qualifications = "warn"
+
+[[example]]
+name = "loose_bool"
+crate-type = ["lib"]
+
+[[example]]
+name = "loose_bool_generic"
+crate-type = ["lib"]
