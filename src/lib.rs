@@ -1,8 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[doc(hidden)]
-#[cfg(feature = "serde")]
-pub use serde_core as __serde;
+pub mod __internal;
 
 /// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(not(feature = "serde"))]
@@ -11,48 +10,21 @@ macro_rules! loose_enum {
     // Special case for strings:
     (
         $(#[$outer:meta])*
-        $vis:vis enum $name:ident: String
-        {
-            $(
-                $(#[$meta:meta])*
-                $variant:ident = $value:expr
-            ),+ $(,)?
+        $vis:vis enum $name:ident: String {
+            $($body:tt)*
         }
     ) => {
-        $(#[$outer])*
-        $vis enum $name {
-            $(
-                $(#[$meta])*
-                $variant
-            ),+,
-            /// Any value that doesn't match another case.
-            Undefined(String),
-        }
-
-        impl From<String> for $name {
-            fn from(value: String) -> Self {
-                match value.as_str() {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other.to_string()),
-                }
+        $crate::loose_enum_type! {
+            $(#[$outer])*
+            $vis enum $name: String {
+                $($body)*
             }
         }
 
-        impl<'a> From<&'a str> for $name {
-            fn from(value: &'a str) -> Self {
-                match value {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other.to_string()),
-                }
-            }
-        }
-
-        impl From<$name> for String {
-            fn from(value: $name) -> Self {
-                match value {
-                    $( $name::$variant => $value.to_string(), )+
-                    $name::Undefined(val) => val,
-                }
+        $crate::loose_enum_impl! {
+            $(#[$outer])*
+            $vis enum $name: String {
+                $($body)*
             }
         }
     };
@@ -62,39 +34,21 @@ macro_rules! loose_enum {
     // All other types:
     (
         $(#[$outer:meta])*
-        $vis:vis enum $name:ident: $ty:ident
-        {
-            $(
-                $(#[$meta:meta])*
-                $variant:ident = $value:expr
-            ),+ $(,)?
+        $vis:vis enum $name:ident: $ty:ident {
+            $($body:tt)*
         }
     ) => {
-        $(#[$outer])*
-        $vis enum $name {
-            $(
-                $(#[$meta])*
-                $variant
-            ),+,
-            /// Any value that doesn't match another case.
-            Undefined($ty),
-        }
-
-        impl From<$ty> for $name {
-            fn from(value: $ty) -> Self {
-                match value {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other),
-                }
+        $crate::loose_enum_type! {
+            $(#[$outer])*
+            $vis enum $name: $ty {
+                $($body)*
             }
         }
 
-        impl From<$name> for $ty {
-            fn from(value: $name) -> Self {
-                match value {
-                    $( $name::$variant => $value, )+
-                    $name::Undefined(val) => val,
-                }
+        $crate::loose_enum_impl! {
+            $(#[$outer])*
+            $vis enum $name: $ty {
+                $($body)*
             }
         }
     };
@@ -106,44 +60,25 @@ macro_rules! loose_enum {
         $(#[$outer:meta])*
         $vis:vis enum $name:ident<$ty:ident $( : $first_bound:tt $(+ $other_bounds:tt)* )?>
         {
-            $(
-                $(#[$meta:meta])*
-                $variant:ident = $value:expr
-            ),+ $(,)?
+            $($body:tt)*
         }
     ) => {
-        $(#[$outer])*
-        $vis enum $name<$ty$(: $first_bound $(+ $other_bounds)+)?> {
-            $(
-                $(#[$meta])*
-                $variant
-            ),+,
-            /// Any value that doesn't match another case.
-            Undefined($ty),
-        }
-
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> From<$ty> for $name<$ty> {
-            fn from(value: $ty) -> Self {
-                match value {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other),
-                }
+        $crate::loose_enum_type! {
+            $(#[$outer])*
+            $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
+                $($body)*
             }
         }
 
-        // Todo Orphan rule forbids `From` impl.
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> $name<$ty> {
-            /// Converts the case into its representation.
-            /// Orphan rule forbids `From` implementation, so we create our own method.
-            pub fn to_repr(self) -> $ty {
-                match self {
-                    $( $name::$variant => $value, )+
-                    $name::Undefined(val) => val,
-                }
+        $crate::loose_enum_impl! {
+            $(#[$outer])*
+            $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
+                $($body)*
             }
         }
     };
 }
+
 
 /// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(feature = "serde")]
@@ -152,73 +87,28 @@ macro_rules! loose_enum {
     // Special case for strings:
     (
         $(#[$outer:meta])*
-        $vis:vis enum $name:ident: String
-        {
-            $(
-                $(#[$meta:meta])*
-                $variant:ident = $value:expr
-            ),+ $(,)?
+        $vis:vis enum $name:ident: String {
+            $($body:tt)*
         }
     ) => {
-        $(#[$outer])*
-        $vis enum $name {
-            $(
-                $(#[$meta])*
-                $variant
-            ),+,
-            /// Any value that doesn't match another case.
-            Undefined(String),
-        }
-
-        impl From<String> for $name {
-            fn from(value: String) -> Self {
-                match value.as_str() {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other.to_string()),
-                }
+        $crate::loose_enum_type! {
+            $(#[$outer])*
+            $vis enum $name: String {
+                $($body)*
             }
         }
 
-        impl<'a> From<&'a str> for $name {
-            fn from(value: &'a str) -> Self {
-                match value {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other.to_string()),
-                }
+        $crate::loose_enum_impl! {
+            $(#[$outer])*
+            $vis enum $name: String {
+                $($body)*
             }
         }
-
-        impl From<$name> for String {
-            fn from(value: $name) -> Self {
-                match value {
-                    $( $name::$variant => $value.to_string(), )+
-                    $name::Undefined(val) => val,
-                }
-            }
-        }
-
-        impl<'de> $crate::__serde::Deserialize<'de> for $name {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: $crate::__serde::Deserializer<'de>,
-            {
-                let val = String::deserialize(deserializer)?;
-                Ok(match val.as_str() {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other.to_string()),
-                })
-            }
-        }
-
-        impl $crate::__serde::Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: $crate::__serde::Serializer,
-            {
-                match self {
-                    $( $name::$variant => str::serialize($value, serializer), )+
-                    $name::Undefined(val) => str::serialize(val, serializer),
-                }
+        
+        $crate::loose_enum_serde! {
+            $(#[$outer])*
+            $vis enum $name: String {
+                $($body)*
             }
         }
     };
@@ -228,64 +118,28 @@ macro_rules! loose_enum {
     // All other types:
     (
         $(#[$outer:meta])*
-        $vis:vis enum $name:ident: $ty:ident
-        {
-            $(
-                $(#[$meta:meta])*
-                $variant:ident = $value:expr
-            ),+ $(,)?
+        $vis:vis enum $name:ident: $ty:ident {
+            $($body:tt)*
         }
     ) => {
-        $(#[$outer])*
-        $vis enum $name {
-            $(
-                $(#[$meta])*
-                $variant
-            ),+,
-            /// Any value that doesn't match another case.
-            Undefined($ty),
-        }
-
-        impl From<$ty> for $name {
-            fn from(value: $ty) -> Self {
-                match value {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other),
-                }
+        $crate::loose_enum_type! {
+            $(#[$outer])*
+            $vis enum $name: $ty {
+                $($body)*
             }
         }
 
-        impl From<$name> for $ty {
-            fn from(value: $name) -> Self {
-                match value {
-                    $( $name::$variant => $value, )+
-                    $name::Undefined(val) => val,
-                }
+        $crate::loose_enum_impl! {
+            $(#[$outer])*
+            $vis enum $name: $ty {
+                $($body)*
             }
         }
-
-        impl<'de> $crate::__serde::Deserialize<'de> for $name {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: $crate::__serde::Deserializer<'de>,
-            {
-                let val = $ty::deserialize(deserializer)?;
-                Ok(match val {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other),
-                })
-            }
-        }
-
-        impl $crate::__serde::Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: $crate::__serde::Serializer,
-            {
-                match self {
-                    $( $name::$variant => $ty::serialize(&$value, serializer), )+
-                    $name::Undefined(val) => $ty::serialize(val, serializer),
-                }
+        
+        $crate::loose_enum_serde! {
+            $(#[$outer])*
+            $vis enum $name: $ty {
+                $($body)*
             }
         }
     };
@@ -297,65 +151,27 @@ macro_rules! loose_enum {
         $(#[$outer:meta])*
         $vis:vis enum $name:ident<$ty:ident $( : $first_bound:tt $(+ $other_bounds:tt)* )?>
         {
-            $(
-                $(#[$meta:meta])*
-                $variant:ident = $value:expr
-            ),+ $(,)?
+            $($body:tt)*
         }
     ) => {
-        $(#[$outer])*
-        $vis enum $name<$ty$(: $first_bound $(+ $other_bounds)+)?> {
-            $(
-                $(#[$meta])*
-                $variant
-            ),+,
-            /// Any value that doesn't match another case.
-            Undefined($ty),
-        }
-
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> From<$ty> for $name<$ty> {
-            fn from(value: $ty) -> Self {
-                match value {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other),
-                }
+        $crate::loose_enum_type! {
+            $(#[$outer])*
+            $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
+                $($body)*
             }
         }
 
-        // Todo Orphan rule forbids `From` impl.
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)?> $name<$ty> {
-            /// Converts the case into its representation.
-            /// Orphan rule forbids `From` implementation, so we create our own method.
-            pub fn to_repr(self) -> $ty {
-                match self {
-                    $( $name::$variant => $value, )+
-                    $name::Undefined(val) => val,
-                }
+        $crate::loose_enum_impl! {
+            $(#[$outer])*
+            $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
+                $($body)*
             }
         }
-
-        impl<'de, $ty$(: $first_bound $(+ $other_bounds)+)? + $crate::__serde::Deserialize<'de>> $crate::__serde::Deserialize<'de> for $name<$ty> {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: $crate::__serde::Deserializer<'de>,
-            {
-                let val = $ty::deserialize(deserializer)?;
-                Ok(match val {
-                    $( c if c == $value => $name::$variant, )+
-                    other => $name::Undefined(other),
-                })
-            }
-        }
-
-        impl<$ty$(: $first_bound $(+ $other_bounds)+)? + $crate::__serde::Serialize> $crate::__serde::Serialize for $name<$ty> {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: $crate::__serde::Serializer,
-            {
-                match self {
-                    $( $name::$variant => $ty::serialize(&$value, serializer), )+
-                    $name::Undefined(val) => $ty::serialize(val, serializer),
-                }
+        
+        $crate::loose_enum_serde! {
+            $(#[$outer])*
+            $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
+                $($body)*
             }
         }
     };
