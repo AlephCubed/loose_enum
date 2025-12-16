@@ -6,12 +6,12 @@
 use core::error::Error;
 use core::fmt::{Display, Formatter};
 use loose_enum::loose_enum;
-use num_traits::{ConstOne, ConstZero, PrimInt};
+use num_traits::{ConstOne, ConstZero};
 
 loose_enum! {
     /// An integer repr bool, with 0 being false and 1 being true. Any other value will be saved as Undefined.
     #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Hash)]
-    pub enum LooseBool<T: PrimInt + ConstZero + ConstOne> {
+    pub enum LooseBool<T: PartialEq + ConstZero + ConstOne> {
         /// A falsy value of zero.
         #[default]
         False = T::ZERO,
@@ -20,7 +20,7 @@ loose_enum! {
     }
 }
 
-impl<T: PrimInt + ConstZero + ConstOne> LooseBool<T> {
+impl<T: PartialEq + ConstZero + ConstOne> LooseBool<T> {
     /// Returns true if the value is [`True`](Self::True).
     pub fn is_true(&self) -> bool {
         matches!(self, Self::True)
@@ -40,7 +40,7 @@ impl<T: PrimInt + ConstZero + ConstOne> LooseBool<T> {
     }
 }
 
-impl<T: PrimInt + ConstZero + ConstOne> TryFrom<LooseBool<T>> for bool {
+impl<T: PartialEq + ConstZero + ConstOne> TryFrom<LooseBool<T>> for bool {
     type Error = UndefinedBoolError;
 
     fn try_from(value: LooseBool<T>) -> Result<Self, Self::Error> {

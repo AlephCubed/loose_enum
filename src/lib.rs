@@ -4,8 +4,8 @@
 #[doc(hidden)]
 pub mod __internal;
 
-/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(not(feature = "serde"))]
+#[doc = include_str!("../macro_docs.md")]
 #[macro_export]
 macro_rules! loose_enum {
     // Special case for strings:
@@ -82,6 +82,7 @@ macro_rules! loose_enum {
 
 /// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(feature = "serde")]
+#[doc = include_str!("../macro_docs.md")]
 #[macro_export]
 macro_rules! loose_enum {
     // Special case for strings:
