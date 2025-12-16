@@ -1,5 +1,6 @@
+#[doc(hidden)]
 #[macro_export]
-macro_rules! loose_enum_type {
+macro_rules! __loose_enum_type {
     // All types (including String):
     (
         $(#[$outer:meta])*
@@ -45,8 +46,9 @@ macro_rules! loose_enum_type {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
-macro_rules! loose_enum_impl {
+macro_rules! __loose_enum_impl {
     // Special case for strings:
     (
         $(#[$outer:meta])*
@@ -156,8 +158,9 @@ macro_rules! loose_enum_impl {
 pub use serde_core as serde;
 
 #[cfg(feature = "serde")]
+#[doc(hidden)]
 #[macro_export]
-macro_rules! loose_enum_serde {
+macro_rules! __loose_enum_serde {
     // Special case for strings:
     (
         $(#[$outer:meta])*

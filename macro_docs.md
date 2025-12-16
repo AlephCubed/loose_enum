@@ -1,12 +1,7 @@
-# Loose Enum
-[![Version](https://img.shields.io/crates/v/loose_enum)](https://crates.io/crates/loose_enum)
-[![Docs](https://img.shields.io/docsrs/loose_enum)](https://docs.rs/loose_enum)
-![License](https://img.shields.io/crates/l/loose_enum)
-
 A macro for defining loose repr enums.
 
 When parsing userdata, you often have known/supported cases; however, users don't always follow the rules.
-One way to solve this is having a backup `Undefined` case that supports any value. This crate hopes to simplify this process.
+One way to solve this is having a backup `Undefined` case that supports any value. This macro hopes to simplify this process.
 
 ### Example:
 An integer repr bool, with 0 being false and 1 being true would look something like this:
@@ -31,7 +26,7 @@ pub enum LooseBool {
     Undefined(i32),
 }
 ```
-The macro will also generate `From<i32>` and `Into<i32>` trait implementations.
+The macro will also generate `From<i32>` and `Into<i32>` trait implementations. 
 If the `serde` feature is enabled, `Serialize` and `Deserialize` will also be implemented.
 ## Special Cases
 ### String

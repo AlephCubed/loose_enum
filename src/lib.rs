@@ -4,8 +4,8 @@
 #[doc(hidden)]
 pub mod __internal;
 
-/// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(not(feature = "serde"))]
+#[doc = include_str!("../macro_docs.md")]
 #[macro_export]
 macro_rules! loose_enum {
     // Special case for strings:
@@ -15,14 +15,14 @@ macro_rules! loose_enum {
             $($body:tt)*
         }
     ) => {
-        $crate::loose_enum_type! {
+        $crate::__loose_enum_type! {
             $(#[$outer])*
             $vis enum $name: String {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_impl! {
+        $crate::__loose_enum_impl! {
             $(#[$outer])*
             $vis enum $name: String {
                 $($body)*
@@ -39,14 +39,14 @@ macro_rules! loose_enum {
             $($body:tt)*
         }
     ) => {
-        $crate::loose_enum_type! {
+        $crate::__loose_enum_type! {
             $(#[$outer])*
             $vis enum $name: $ty {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_impl! {
+        $crate::__loose_enum_impl! {
             $(#[$outer])*
             $vis enum $name: $ty {
                 $($body)*
@@ -64,14 +64,14 @@ macro_rules! loose_enum {
             $($body:tt)*
         }
     ) => {
-        $crate::loose_enum_type! {
+        $crate::__loose_enum_type! {
             $(#[$outer])*
             $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_impl! {
+        $crate::__loose_enum_impl! {
             $(#[$outer])*
             $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
                 $($body)*
@@ -82,6 +82,7 @@ macro_rules! loose_enum {
 
 /// Defines a repr enum that supports any value. If a value does not match any case, it will be parsed as `Undefined`.
 #[cfg(feature = "serde")]
+#[doc = include_str!("../macro_docs.md")]
 #[macro_export]
 macro_rules! loose_enum {
     // Special case for strings:
@@ -91,21 +92,21 @@ macro_rules! loose_enum {
             $($body:tt)*
         }
     ) => {
-        $crate::loose_enum_type! {
+        $crate::__loose_enum_type! {
             $(#[$outer])*
             $vis enum $name: String {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_impl! {
+        $crate::__loose_enum_impl! {
             $(#[$outer])*
             $vis enum $name: String {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_serde! {
+        $crate::__loose_enum_serde! {
             $(#[$outer])*
             $vis enum $name: String {
                 $($body)*
@@ -122,21 +123,21 @@ macro_rules! loose_enum {
             $($body:tt)*
         }
     ) => {
-        $crate::loose_enum_type! {
+        $crate::__loose_enum_type! {
             $(#[$outer])*
             $vis enum $name: $ty {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_impl! {
+        $crate::__loose_enum_impl! {
             $(#[$outer])*
             $vis enum $name: $ty {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_serde! {
+        $crate::__loose_enum_serde! {
             $(#[$outer])*
             $vis enum $name: $ty {
                 $($body)*
@@ -154,21 +155,21 @@ macro_rules! loose_enum {
             $($body:tt)*
         }
     ) => {
-        $crate::loose_enum_type! {
+        $crate::__loose_enum_type! {
             $(#[$outer])*
             $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_impl! {
+        $crate::__loose_enum_impl! {
             $(#[$outer])*
             $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
                 $($body)*
             }
         }
 
-        $crate::loose_enum_serde! {
+        $crate::__loose_enum_serde! {
             $(#[$outer])*
             $vis enum $name<$ty $( : $first_bound $(+ $other_bounds)* )?> {
                 $($body)*
@@ -179,8 +180,6 @@ macro_rules! loose_enum {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[cfg(feature = "std")]
     loose_enum!(
         #[derive(Debug, Eq, PartialEq)]
